@@ -30,6 +30,13 @@
     </div>
   </header>
 
+  <sc-if value="{{ sent }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ dismissSent }}" style="max-width:560px;margin:0 auto 32px;padding:16px 20px;background:#fbfdff;border:2px solid #0038b8;color:#14244a;text-align:center;font-size:18px;cursor:pointer">הפתק שלכם התקבל, תודה! הוא יופיע בקיר מיד אחרי שנאשר אותו.</div>
+  </sc-if>
+  <sc-if value="{{ loadError }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:560px;margin:0 auto 32px;padding:16px 20px;color:#b3261e;text-align:center;font-size:18px">לא הצלחנו לטעון את הקיר. נסו לרענן את העמוד.</div>
+  </sc-if>
+
   <main style="max-width:1240px;margin:0 auto;padding:0 20px 96px">
     <div style="columns:270px;column-gap:26px">
       <sc-for list="{{ stories }}" as="s" hint-placeholder-count="8">
@@ -85,10 +92,10 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
-  state = { stories: [], form: this.blank(), msg: '', writing: false, folding: false, added: null, randomId: null };
+  state = { stories: [], form: this.blank(), msg: '', writing: false, folding: false, added: null, randomId: null, sent: false, loadError: false };
   blank() { return { text: '', name: '', age: '', city: '', date: new Date().toISOString().slice(0, 10) }; }
   componentDidMount() {
-    const go = () => window.StoryStore ? this.setState({ stories: window.StoryStore.load() }) : setTimeout(go, 50);
+    const go = () => window.StoryStore ? window.StoryStore.load().then(stories => this.setState({ stories }), () => this.setState({ loadError: true })) : setTimeout(go, 50);
     go();
   }
   tone(id) { const T = [['#ffffff','#dfe8f6'],['#f2f6fd','#d3dff2'],['#e3ecfa','#c5d5ef'],['#d0def5','#b2c6e8'],['#bcd0f0','#9db6e0'],['#a9c2ea','#8aa7d8']]; let h = 0; for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0; const t = T[h % T.length]; return { bg: t[0], fold: t[1] }; }
@@ -120,15 +127,17 @@ class Component extends DCLogic {
       countColor: n > 10 ? '#b3261e' : '#4a5a80',
       paperTransform: folding ? 'perspective(900px) rotateX(80deg) scale(.25) translateY(-200px)' : 'none',
       paperOpacity: folding ? 0 : 1,
-      openWrite: () => this.setState({ writing: true, folding: false, msg: '' }),
+      openWrite: () => this.setState({ writing: true, folding: false, msg: '', sent: false }),
+      sent: this.state.sent, loadError: this.state.loadError, dismissSent: () => this.setState({ sent: false }),
       close: () => this.setState({ writing: false }),
       stop: e => e.stopPropagation(),
       submit: () => {
         const e = S.validate(form);
         if (e) return this.setState({ msg: e });
-        const s = S.add(form);
-        this.setState({ folding: true });
-        setTimeout(() => this.setState({ writing: false, folding: false, stories: S.load(), added: s.id, form: { ...this.blank(), name: form.name, age: form.age, city: form.city } }), 750);
+        S.add(form).then(() => {
+          this.setState({ folding: true });
+          setTimeout(() => this.setState({ writing: false, folding: false, sent: true, form: { ...this.blank(), name: form.name, age: form.age, city: form.city } }), 750);
+        }, err => this.setState({ msg: err.message }));
       },
       hasRandom: !!rnd,
       random: rnd ? { ...rnd, dateFmt: S.fmtDate(rnd.date), bg: this.tone(rnd.id).bg } : {},
@@ -139,7 +148,7 @@ class Component extends DCLogic {
         rot: [-1.8, 1.2, -0.6, 2, -1.2, 0.8][i % 6],
         outline: s.id === added ? '3px solid #0038b8' : 'none',
         heartFg: s.liked ? '#1d4fa0' : '#b39d75',
-        onHeart: () => { S.toggleHeart(s.id); this.setState({ stories: S.load() }); },
+        onHeart: () => S.toggleHeart(s.id).then(() => S.load()).then(stories => this.setState({ stories })).catch(() => {}),
       })),
     };
   }

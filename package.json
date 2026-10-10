@@ -1,0 +1,8 @@
+{
+  "name": "this-is-why-i-am-here",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.0"
+  }
+}
