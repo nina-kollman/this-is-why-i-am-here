@@ -11,11 +11,10 @@ export default async function handler(req, res) {
   try {
     if (req.method === 'GET') {
       const rows = await sql`
-        select id, name, age, city, text, hearts,
-               to_char(story_date, 'YYYY-MM-DD') as date
+        select id, name, age, city, text, story_year as year
         from stories
         where status = 'approved'
-        order by story_date desc, created_at desc
+        order by story_year desc, created_at desc
         limit 500`;
       res.setHeader('Cache-Control', 'public, s-maxage=15, stale-while-revalidate=60');
       return res.status(200).json(rows);
@@ -28,11 +27,13 @@ export default async function handler(req, res) {
       const name = clean(b.name, 60);
       const city = clean(b.city, 60);
       const age = Math.round(Number(b.age));
-      const date = /^\d{4}-\d{2}-\d{2}$/.test(b.date) ? b.date : new Date().toISOString().slice(0, 10);
+      const thisYear = new Date().getFullYear();
+      const year = Math.round(Number(b.year)) || thisYear;
 
       if (!text) return res.status(400).json({ error: 'כתבו את הסיפור שלכם' });
       if (countSentences(text) > 10) return res.status(400).json({ error: 'עד 10 משפטים, בבקשה' });
       if (!name) return res.status(400).json({ error: 'איך קוראים לכם?' });
+      if (!(year >= 1900 && year <= thisYear)) return res.status(400).json({ error: 'איזו שנה?' });
       if (!(age >= 1 && age <= 120)) return res.status(400).json({ error: 'מה הגיל?' });
       if (!city) return res.status(400).json({ error: 'מאיזו עיר?' });
 
@@ -45,8 +46,8 @@ export default async function handler(req, res) {
       if (n >= MAX_PER_HOUR) return res.status(429).json({ error: 'יותר מדי פתקים, נסו שוב מאוחר יותר' });
 
       await sql`
-        insert into stories (text, name, age, city, story_date, ip_hash)
-        values (${text}, ${name}, ${age}, ${city}, ${date}, ${ipHash})`;
+        insert into stories (text, name, age, city, story_year, ip_hash)
+        values (${text}, ${name}, ${age}, ${city}, ${year}, ${ipHash})`;
       return res.status(201).json({ ok: true, pending: true });
     }
 

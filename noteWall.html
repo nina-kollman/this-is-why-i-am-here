@@ -46,7 +46,7 @@
           <div style="display:flex;justify-content:space-between;align-items:end;gap:10px;border-top:1px dashed #9fb3d9;padding-top:12px">
             <div style="display:flex;flex-direction:column">
               <div style="font-family:'Amatic SC',cursive;font-size:30px;line-height:1;color:#0038b8">{{ s.name }}, {{ s.age }}</div>
-              <div style="font-size:14px;color:#4a5a80">{{ s.city }} · {{ s.dateFmt }}</div>
+              <div style="font-size:14px;color:#4a5a80">{{ s.city }} · {{ s.year }}</div>
             </div>
           </div>
         </article>
@@ -67,7 +67,7 @@
           <input value="{{ form.name }}" onChange="{{ onName }}" placeholder="שם" style="border:0;border-bottom:2px solid #b7c8e8;background:transparent;font-size:18px;padding:10px 2px;outline:none;color:#14244a">
           <input type="number" value="{{ form.age }}" onChange="{{ onAge }}" placeholder="גיל" style="border:0;border-bottom:2px solid #b7c8e8;background:transparent;font-size:18px;padding:10px 2px;outline:none;color:#14244a">
           <input value="{{ form.city }}" onChange="{{ onCity }}" placeholder="עיר" style="border:0;border-bottom:2px solid #b7c8e8;background:transparent;font-size:18px;padding:10px 2px;outline:none;color:#14244a">
-          <input type="date" value="{{ form.date }}" onChange="{{ onDate }}" style="border:0;border-bottom:2px solid #b7c8e8;background:transparent;font-size:16px;padding:10px 2px;outline:none;color:#14244a">
+          <input type="number" value="{{ form.year }}" onChange="{{ onYear }}" placeholder="שנה" style="border:0;border-bottom:2px solid #b7c8e8;background:transparent;font-size:16px;padding:10px 2px;outline:none;color:#14244a">
         </div>
         <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:6px">
           <button onClick="{{ submit }}" style="background:#0038b8;color:#ffffff;border:0;font-family:inherit;font-weight:700;font-size:19px;padding:14px 28px;border-radius:6px;cursor:pointer;box-shadow:0 4px 0 #002a8a">לקפל ולשים בקיר</button>
@@ -82,7 +82,7 @@
       <div onClick="{{ stop }}" style="width:min(600px,100%);background:{{ random.bg }};color:#14244a;padding:clamp(26px,5vw,52px);display:flex;flex-direction:column;gap:22px;transform:rotate(-1.5deg);box-shadow:0 30px 60px -20px rgba(0,0,0,.5)">
         <p style="margin:0;font-size:clamp(20px,2.4vw,26px);line-height:1.6;text-wrap:pretty">{{ random.text }}</p>
         <div style="display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap">
-          <div><div style="font-family:'Amatic SC',cursive;font-size:38px;line-height:1;color:#0038b8">{{ random.name }}, {{ random.age }}</div><div style="font-size:15px;color:#4a5a80">{{ random.city }} · {{ random.dateFmt }}</div></div>
+          <div><div style="font-family:'Amatic SC',cursive;font-size:38px;line-height:1;color:#0038b8">{{ random.name }}, {{ random.age }}</div><div style="font-size:15px;color:#4a5a80">{{ random.city }} · {{ random.year }}</div></div>
           <button onClick="{{ openRandom }}" style="background:#0038b8;color:#ffffff;border:0;font-family:inherit;font-weight:700;font-size:17px;padding:12px 22px;border-radius:6px;cursor:pointer">עוד פתק</button>
         </div>
       </div>
@@ -93,7 +93,7 @@
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
   state = { stories: [], form: this.blank(), msg: '', writing: false, folding: false, added: null, randomId: null, sent: false, loadError: false };
-  blank() { return { text: '', name: '', age: '', city: '', date: new Date().toISOString().slice(0, 10) }; }
+  blank() { return { text: '', name: '', age: '', city: '', year: new Date().getFullYear() }; }
   componentDidMount() {
     const go = () => window.StoryStore ? window.StoryStore.load().then(stories => this.setState({ stories }), () => this.setState({ loadError: true })) : setTimeout(go, 50);
     go();
@@ -122,7 +122,7 @@ class Component extends DCLogic {
       flag: this.makeFlag(),
       stats: S ? S.stats(stories) : { stories: 0, people: 0 },
       form, writing: this.state.writing, msg: this.state.msg,
-      onText: this.set('text'), onName: this.set('name'), onAge: this.set('age'), onCity: this.set('city'), onDate: this.set('date'),
+      onText: this.set('text'), onName: this.set('name'), onAge: this.set('age'), onCity: this.set('city'), onYear: this.set('year'),
       sentenceLabel: n > 10 ? `${n} משפטים — עד 10, בבקשה` : `${n} מתוך 10 משפטים`,
       countColor: n > 10 ? '#b3261e' : '#4a5a80',
       paperTransform: folding ? 'perspective(900px) rotateX(80deg) scale(.25) translateY(-200px)' : 'none',
@@ -140,15 +140,13 @@ class Component extends DCLogic {
         }, err => this.setState({ msg: err.message }));
       },
       hasRandom: !!rnd,
-      random: rnd ? { ...rnd, dateFmt: S.fmtDate(rnd.date), bg: this.tone(rnd.id).bg } : {},
+      random: rnd ? { ...rnd, bg: this.tone(rnd.id).bg } : {},
       openRandom: () => { const o = stories.filter(s => s.id !== randomId); const p = o[Math.floor(Math.random() * o.length)]; p && this.setState({ randomId: p.id }); },
       closeRandom: () => this.setState({ randomId: null }),
       stories: stories.map((s, i) => ({
-        ...s, dateFmt: S.fmtDate(s.date), bg: this.tone(s.id).bg, fold: this.tone(s.id).fold,
+        ...s, bg: this.tone(s.id).bg, fold: this.tone(s.id).fold,
         rot: [-1.8, 1.2, -0.6, 2, -1.2, 0.8][i % 6],
         outline: s.id === added ? '3px solid #0038b8' : 'none',
-        heartFg: s.liked ? '#1d4fa0' : '#b39d75',
-        onHeart: () => S.toggleHeart(s.id).then(() => S.load()).then(stories => this.setState({ stories })).catch(() => {}),
       })),
     };
   }
