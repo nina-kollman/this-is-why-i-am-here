@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&amp;family=Amatic+SC:wght@700&amp;display=swap" rel="stylesheet">
+<script src="./story-store.js"></script>
+<style>body{margin:0;background:#ddd4c2;font-family:'Frank Ruhl Libre',serif;color:#14244a}a{color:#1d4fa0}a:hover{color:#123a7c}*{box-sizing:border-box}input,textarea{font-family:inherit}@keyframes flagwave{0%,100%{transform:translateY(calc(var(--a) * -1px));filter:brightness(1.04)}50%{transform:translateY(calc(var(--a) * 1px));filter:brightness(.86)}}</style>
+</helmet>
+<div dir="rtl" style="min-height: 100vh; background-color: #E8EFF1">
+  <header style="max-width:1180px;margin:0 auto;padding:clamp(40px,7vw,96px) 24px clamp(32px,5vw,56px);display:flex;flex-direction:column;align-items:center;text-align:center;gap:18px">
+    
+    
+    <h1 style="margin:0;font-weight:900;font-size:clamp(56px,10vw,132px);line-height:.95;color:#14244a;letter-spacing:-.01em">זה למה אני פה</h1>
+    <p style="margin:0;font-size:clamp(18px,1.8vw,22px);line-height:1.55;max-width:560px;color:#4f4a3e;text-wrap:pretty">כתבו פתק קטן, עד עשרה משפטים, ושימו אותו בקיר. בלי הרשמה, בלי שמות משתמש. רק אתם והסיבה שלכם.</p>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:6px">
+      <button onClick="{{ openWrite }}" style="background:#0038b8;color:#ffffff;border:0;font-family:inherit;font-weight:700;font-size:20px;padding:16px 32px;border-radius:6px;cursor:pointer;box-shadow:0 4px 0 #002a8a" style-hover="background:#002a8a">לכתוב פתק</button>
+      <button onClick="{{ openRandom }}" style="background:#f6f2ea;color:#14244a;border:0;font-family:inherit;font-weight:700;font-size:20px;padding:16px 28px;border-radius:6px;cursor:pointer;box-shadow:0 4px 0 #b9ae98" style-hover="background:#ffffff">פתק אקראי</button>
+    </div>
+    <div style="display:flex;gap:clamp(24px,5vw,64px);margin-top:24px;flex-wrap:wrap;justify-content:center">
+      <div style="display:flex;flex-direction:column;align-items:center;color:#14244a"><div style="font-size:clamp(44px,5vw,64px);font-weight:900;line-height:1">{{ stats.stories }}</div><div style="font-family:'Amatic SC',cursive;font-size:28px;color:#5a5446">פתקים בקיר</div></div>
+      <div style="width:2px;background:#b9ae98"></div>
+      <div style="display:flex;flex-direction:column;align-items:center;color:#14244a"><div style="font-size:clamp(44px,5vw,64px);font-weight:900;line-height:1">{{ stats.people }}</div><div style="font-family:'Amatic SC',cursive;font-size:28px;color:#5a5446">אנשים שכתבו</div></div>
+    </div>
+  </header>
+
+  <main style="max-width:1240px;margin:0 auto;padding:0 20px 96px">
+    <div style="columns:270px;column-gap:26px">
+      <sc-for list="{{ stories }}" as="s" hint-placeholder-count="8">
+        <article style="break-inside:avoid;margin:0 0 30px;background:{{ s.bg }};color:#14244a;padding:26px 24px 20px;transform:rotate({{ s.rot }}deg);box-shadow:0 12px 20px -12px rgba(60,50,30,.55);position:relative;display:flex;flex-direction:column;gap:14px;outline:{{ s.outline }};transition:transform .25s" style-hover="transform:rotate(0deg) scale(1.03)">
+          <div style="position:absolute;top:0;left:0;width:28px;height:28px;background:linear-gradient(225deg,#ddd4c2 50%,{{ s.fold }} 50%)"></div>
+          <p style="margin:0;font-size:18px;line-height:1.65;text-wrap:pretty">{{ s.text }}</p>
+          <div style="display:flex;justify-content:space-between;align-items:end;gap:10px;border-top:1px dashed #9fb3d9;padding-top:12px">
+            <div style="display:flex;flex-direction:column">
+              <div style="font-family:'Amatic SC',cursive;font-size:30px;line-height:1;color:#0038b8">{{ s.name }}, {{ s.age }}</div>
+              <div style="font-size:14px;color:#4a5a80">{{ s.city }} · {{ s.dateFmt }}</div>
+            </div>
+          </div>
+        </article>
+      </sc-for>
+    </div>
+  </main>
+
+  <sc-if value="{{ writing }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ close }}" style="position:fixed;inset:0;background:rgba(50,42,28,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10">
+      <div onClick="{{ stop }}" style="width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;background:#fbfdff;color:#14244a;padding:clamp(22px,4vw,40px);display:flex;flex-direction:column;gap:18px;transform:{{ paperTransform }};opacity:{{ paperOpacity }};transition:transform .7s cubic-bezier(.6,-0.2,.4,1),opacity .7s;transform-origin:top center;box-shadow:0 30px 60px -20px rgba(0,0,0,.5);background-image:repeating-linear-gradient(transparent 0 35px,#dbe6f7 35px 36px)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-family:'Amatic SC',cursive;font-size:38px;color:#0038b8;line-height:1">הפתק שלי</div>
+          <button onClick="{{ close }}" style="background:none;border:0;font-size:28px;cursor:pointer;color:#4a5a80;width:44px;height:44px">×</button>
+        </div>
+        <textarea value="{{ form.text }}" onChange="{{ onText }}" rows="6" placeholder="זה למה אני פה..." style="width:100%;border:0;background:transparent;font-size:20px;line-height:36px;resize:none;outline:none;color:#14244a;padding:0"></textarea>
+        <div style="font-size:15px;color:{{ countColor }}">{{ sentenceLabel }}</div>
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
+          <input value="{{ form.name }}" onChange="{{ onName }}" placeholder="שם" style="border:0;border-bottom:2px solid #b7c8e8;background:transparent;font-size:18px;padding:10px 2px;outline:none;color:#14244a">
+          <input type="number" value="{{ form.age }}" onChange="{{ onAge }}" placeholder="גיל" style="border:0;border-bottom:2px solid #b7c8e8;background:transparent;font-size:18px;padding:10px 2px;outline:none;color:#14244a">
+          <input value="{{ form.city }}" onChange="{{ onCity }}" placeholder="עיר" style="border:0;border-bottom:2px solid #b7c8e8;background:transparent;font-size:18px;padding:10px 2px;outline:none;color:#14244a">
+          <input type="date" value="{{ form.date }}" onChange="{{ onDate }}" style="border:0;border-bottom:2px solid #b7c8e8;background:transparent;font-size:16px;padding:10px 2px;outline:none;color:#14244a">
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:6px">
+          <button onClick="{{ submit }}" style="background:#0038b8;color:#ffffff;border:0;font-family:inherit;font-weight:700;font-size:19px;padding:14px 28px;border-radius:6px;cursor:pointer;box-shadow:0 4px 0 #002a8a">לקפל ולשים בקיר</button>
+          <div style="font-size:16px;color:#b3261e">{{ msg }}</div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasRandom }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeRandom }}" style="position:fixed;inset:0;background:rgba(50,42,28,.6);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10">
+      <div onClick="{{ stop }}" style="width:min(600px,100%);background:{{ random.bg }};color:#14244a;padding:clamp(26px,5vw,52px);display:flex;flex-direction:column;gap:22px;transform:rotate(-1.5deg);box-shadow:0 30px 60px -20px rgba(0,0,0,.5)">
+        <p style="margin:0;font-size:clamp(20px,2.4vw,26px);line-height:1.6;text-wrap:pretty">{{ random.text }}</p>
+        <div style="display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap">
+          <div><div style="font-family:'Amatic SC',cursive;font-size:38px;line-height:1;color:#0038b8">{{ random.name }}, {{ random.age }}</div><div style="font-size:15px;color:#4a5a80">{{ random.city }} · {{ random.dateFmt }}</div></div>
+          <button onClick="{{ openRandom }}" style="background:#0038b8;color:#ffffff;border:0;font-family:inherit;font-weight:700;font-size:17px;padding:12px 22px;border-radius:6px;cursor:pointer">עוד פתק</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { stories: [], form: this.blank(), msg: '', writing: false, folding: false, added: null, randomId: null };
+  blank() { return { text: '', name: '', age: '', city: '', date: new Date().toISOString().slice(0, 10) }; }
+  componentDidMount() {
+    const go = () => window.StoryStore ? this.setState({ stories: window.StoryStore.load() }) : setTimeout(go, 50);
+    go();
+  }
+  tone(id) { const T = [['#ffffff','#dfe8f6'],['#f2f6fd','#d3dff2'],['#e3ecfa','#c5d5ef'],['#d0def5','#b2c6e8'],['#bcd0f0','#9db6e0'],['#a9c2ea','#8aa7d8']]; let h = 0; for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0; const t = T[h % T.length]; return { bg: t[0], fold: t[1] }; }
+  makeFlag() {
+    if (this._flag) return this._flag;
+    const svg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 160'><rect width='220' height='160' fill='%23fff'/><rect y='15' width='220' height='25' fill='%230038b8'/><rect y='120' width='220' height='25' fill='%230038b8'/><g fill='none' stroke='%230038b8' stroke-width='5.5'><polygon points='110,47.5 137.1,94.4 82.9,94.4'/><polygon points='110,112.5 82.9,65.6 137.1,65.6'/></g></svg>";
+    const url = 'url("data:image/svg+xml;utf8,' + svg + '")';
+    const N = 36;
+    const strips = Array.from({ length: N }, (_, i) => React.createElement('div', { key: i, style: {
+      flex: '1 1 0', height: '100%', backgroundImage: url, backgroundSize: (N * 100) + '% 100%', backgroundPosition: (i / (N - 1) * 100) + '% 0',
+      '--a': (0.6 + i * 0.22).toFixed(2), animation: 'flagwave 2.6s ease-in-out infinite', animationDelay: (-i * 0.075) + 's',
+      borderRadius: i === 0 ? '3px 0 0 3px' : i === N - 1 ? '0 3px 3px 0' : 0, marginLeft: i ? '-0.5px' : 0,
+    } }));
+    this._flag = React.createElement('div', { role: 'img', 'aria-label': 'דגל ישראל', dir: 'ltr', style: { display: 'flex', width: '100%', height: '100%' } }, strips);
+    return this._flag;
+  }
+  set(k) { return e => this.setState({ form: { ...this.state.form, [k]: e.target.value }, msg: '' }); }
+  renderVals() {
+    const S = window.StoryStore;
+    const { stories, form, added, folding, randomId } = this.state;
+    const n = S ? S.sentences(form.text) : 0;
+    const rnd = stories.find(s => s.id === randomId);
+    return {
+      flag: this.makeFlag(),
+      stats: S ? S.stats(stories) : { stories: 0, people: 0 },
+      form, writing: this.state.writing, msg: this.state.msg,
+      onText: this.set('text'), onName: this.set('name'), onAge: this.set('age'), onCity: this.set('city'), onDate: this.set('date'),
+      sentenceLabel: n > 10 ? `${n} משפטים — עד 10, בבקשה` : `${n} מתוך 10 משפטים`,
+      countColor: n > 10 ? '#b3261e' : '#4a5a80',
+      paperTransform: folding ? 'perspective(900px) rotateX(80deg) scale(.25) translateY(-200px)' : 'none',
+      paperOpacity: folding ? 0 : 1,
+      openWrite: () => this.setState({ writing: true, folding: false, msg: '' }),
+      close: () => this.setState({ writing: false }),
+      stop: e => e.stopPropagation(),
+      submit: () => {
+        const e = S.validate(form);
+        if (e) return this.setState({ msg: e });
+        const s = S.add(form);
+        this.setState({ folding: true });
+        setTimeout(() => this.setState({ writing: false, folding: false, stories: S.load(), added: s.id, form: { ...this.blank(), name: form.name, age: form.age, city: form.city } }), 750);
+      },
+      hasRandom: !!rnd,
+      random: rnd ? { ...rnd, dateFmt: S.fmtDate(rnd.date), bg: this.tone(rnd.id).bg } : {},
+      openRandom: () => { const o = stories.filter(s => s.id !== randomId); const p = o[Math.floor(Math.random() * o.length)]; p && this.setState({ randomId: p.id }); },
+      closeRandom: () => this.setState({ randomId: null }),
+      stories: stories.map((s, i) => ({
+        ...s, dateFmt: S.fmtDate(s.date), bg: this.tone(s.id).bg, fold: this.tone(s.id).fold,
+        rot: [-1.8, 1.2, -0.6, 2, -1.2, 0.8][i % 6],
+        outline: s.id === added ? '3px solid #0038b8' : 'none',
+        heartFg: s.liked ? '#1d4fa0' : '#b39d75',
+        onHeart: () => { S.toggleHeart(s.id); this.setState({ stories: S.load() }); },
+      })),
+    };
+  }
+}
+</script>
+</body>
+</html>
