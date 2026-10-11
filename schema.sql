@@ -1,5 +1,7 @@
 -- Run once in the Neon SQL Editor.
 -- Existing table? Migrate with:
+--   alter table stories add column if not exists owner_hash text;
+--   alter table stories alter column status set default 'approved';
 --   alter table stories add column story_year int;
 --   update stories set story_year = extract(year from story_date)::int;
 --   alter table stories alter column story_year set not null, drop column story_date, drop column hearts;
@@ -10,8 +12,9 @@ create table if not exists stories (
   age        int  not null check (age between 1 and 120),
   city       text not null check (char_length(city) between 1 and 60),
   story_year int  not null check (story_year between 1900 and 2100),
-  status     text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
+  status     text not null default 'approved' check (status in ('pending', 'approved', 'rejected')),
   ip_hash    text,
+  owner_hash text,  -- sha256 of the author's browser token; only they can delete the note
   created_at timestamptz not null default now()
 );
 

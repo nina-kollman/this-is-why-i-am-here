@@ -9,9 +9,24 @@
     async load() {
       return api('/api/stories');
     },
-    // New notes are saved as "pending" and appear on the wall once approved.
+    // No accounts: each browser holds a secret owner token. The server stores only its hash,
+    // and a note can be deleted only with the token it was written with.
+    owner() {
+      try {
+        let t = localStorage.getItem('wallOwner');
+        if (!t) { t = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now()) + '-' + Math.random().toString(36).slice(2); localStorage.setItem('wallOwner', t); }
+        return t;
+      } catch { return S._ownerMem || (S._ownerMem = String(Math.random()).slice(2) + Date.now() + 'xxxxxxxx'); }
+    },
+    mineIds() { try { return JSON.parse(localStorage.getItem('wallMine') || '[]'); } catch { return []; } },
     async add(story) {
-      await api('/api/stories', { method: 'POST', body: { ...story, age: +story.age, year: +story.year } });
+      const row = await api('/api/stories', { method: 'POST', body: { ...story, age: +story.age, year: +story.year, owner: S.owner() } });
+      try { localStorage.setItem('wallMine', JSON.stringify([...S.mineIds(), row.id])); } catch {}
+      return row;
+    },
+    async remove(id) {
+      await api('/api/stories', { method: 'DELETE', body: { id, owner: S.owner() } });
+      try { localStorage.setItem('wallMine', JSON.stringify(S.mineIds().filter(x => x !== id))); } catch {}
     },
     sentences(t) { return (t || '').split(/[.!?…]+/).map(x => x.trim()).filter(Boolean).length; },
     stats(list) {
